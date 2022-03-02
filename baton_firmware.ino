@@ -72,9 +72,10 @@ void setup()
   startAdvertising();
 }
 
-uint8_t advertisingbuffer[11] = {
-  10,   // 10 bytes after this: the type (one byte) and then the actual data (nine bytes)
+uint8_t advertisingbuffer[13] = {
+  12,   // 12 bytes after this: the type (one byte), manufacturer ID (2 bytes) and then the actual data (nine bytes)
   0xFF, // type 0xFF means "manufacturer specific data"
+  0xFF, 0xFF // manufacturer ID 0xFFFF because we're not a manufacturer in https://www.bluetooth.com/specifications/assigned-numbers/company-identifiers/
   0     // rest of array contains the actual data: first 8 bytes big-endian timestamp in millis since boot, then 1 byte battery percentage
 };
 
@@ -90,11 +91,11 @@ uint64_t millis64() {
 void updateAdvertisingData() {
   uint64_t uptime = millis64();
   for (uint8_t idx = 0; idx < 8; idx++) {
-    advertisingbuffer[2+idx] = (uptime >> (8*(7-idx))) & 0xFF;
+    advertisingbuffer[4+idx] = (uptime >> (8*(7-idx))) & 0xFF;
   }
   float vbat_mv = readVBAT();
   uint8_t vbat_per = mvToPercent(vbat_mv);
-  advertisingbuffer[2+8] = vbat_per;
+  advertisingbuffer[4+8] = vbat_per;
   Bluefruit.Advertising.setData(advertisingbuffer, sizeof(advertisingbuffer));
 }
   
